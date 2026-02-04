@@ -10,7 +10,8 @@
 # : Flavor {{{
 
 [flavor]
-use = ""                # empty = use the styles defined below directly
+dark  = "catppuccin-mocha"   # catppuccin Mocha — applied automatically; user overrides below take precedence
+light = "catppuccin-mocha"   # same flavor for light mode (override if needed)
 
 # : }}}
 

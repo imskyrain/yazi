@@ -44,14 +44,14 @@ keymap = [
 	# -----------------------------------------------------------------------
 	# Navigation — enter / leave directories
 	# -----------------------------------------------------------------------
-	{ on = "h",       run = "leave",    desc = "Go back to parent directory" },
-	{ on = "l",       run = "enter",    desc = "Enter child directory" },
-	{ on = "<Left>",  run = "leave",    desc = "Go back to parent directory" },
-	{ on = "<Right>", run = "enter",    desc = "Enter child directory" },
+	{ on = "h",       run = "leave",                  desc = "Go back to parent directory" },
+	{ on = "l",       run = "plugin smart-enter",     desc = "Enter dir or open file (smart-enter)" },
+	{ on = "<Left>",  run = "leave",                  desc = "Go back to parent directory" },
+	{ on = "<Right>", run = "plugin smart-enter",     desc = "Enter dir or open file (smart-enter)" },
 
-	# Browser-style back / forward
-	{ on = "H", run = "back",    desc = "Go back to previous directory" },
-	{ on = "L", run = "forward", desc = "Go forward to next directory" },
+	# Browser-style back / forward  (Alt+h / Alt+l to free H / L for duckdb)
+	{ on = "<A-h>", run = "back",    desc = "Go back to previous directory" },
+	{ on = "<A-l>", run = "forward", desc = "Go forward to next directory" },
 
 	# -----------------------------------------------------------------------
 	# Preview seeking
@@ -167,20 +167,34 @@ keymap = [
 	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go to directory (interactive)" },
 
 	# -----------------------------------------------------------------------
+	# Numeric motions — relative-motions plugin (vim-style: 3j, 10gg, …)
+	# These consume digits 1-9; tab-switch moves to Ctrl+1…Ctrl+9 below.
+	# -----------------------------------------------------------------------
+	{ on = "1", run = "plugin relative-motions 1", desc = "Relative motion: 1" },
+	{ on = "2", run = "plugin relative-motions 2", desc = "Relative motion: 2" },
+	{ on = "3", run = "plugin relative-motions 3", desc = "Relative motion: 3" },
+	{ on = "4", run = "plugin relative-motions 4", desc = "Relative motion: 4" },
+	{ on = "5", run = "plugin relative-motions 5", desc = "Relative motion: 5" },
+	{ on = "6", run = "plugin relative-motions 6", desc = "Relative motion: 6" },
+	{ on = "7", run = "plugin relative-motions 7", desc = "Relative motion: 7" },
+	{ on = "8", run = "plugin relative-motions 8", desc = "Relative motion: 8" },
+	{ on = "9", run = "plugin relative-motions 9", desc = "Relative motion: 9" },
+
+	# -----------------------------------------------------------------------
 	# Tabs
 	# -----------------------------------------------------------------------
 	{ on = "t", run = "tab_create --current", desc = "New tab (same directory)" },
 
-	# Switch to tab by index
-	{ on = "1", run = "tab_switch 0", desc = "Switch to tab 1" },
-	{ on = "2", run = "tab_switch 1", desc = "Switch to tab 2" },
-	{ on = "3", run = "tab_switch 2", desc = "Switch to tab 3" },
-	{ on = "4", run = "tab_switch 3", desc = "Switch to tab 4" },
-	{ on = "5", run = "tab_switch 4", desc = "Switch to tab 5" },
-	{ on = "6", run = "tab_switch 5", desc = "Switch to tab 6" },
-	{ on = "7", run = "tab_switch 6", desc = "Switch to tab 7" },
-	{ on = "8", run = "tab_switch 7", desc = "Switch to tab 8" },
-	{ on = "9", run = "tab_switch 8", desc = "Switch to tab 9" },
+	# Switch to tab by index (Ctrl+digit — digits freed for relative-motions)
+	{ on = "<C-1>", run = "tab_switch 0", desc = "Switch to tab 1" },
+	{ on = "<C-2>", run = "tab_switch 1", desc = "Switch to tab 2" },
+	{ on = "<C-3>", run = "tab_switch 2", desc = "Switch to tab 3" },
+	{ on = "<C-4>", run = "tab_switch 3", desc = "Switch to tab 4" },
+	{ on = "<C-5>", run = "tab_switch 4", desc = "Switch to tab 5" },
+	{ on = "<C-6>", run = "tab_switch 5", desc = "Switch to tab 6" },
+	{ on = "<C-7>", run = "tab_switch 6", desc = "Switch to tab 7" },
+	{ on = "<C-8>", run = "tab_switch 7", desc = "Switch to tab 8" },
+	{ on = "<C-9>", run = "tab_switch 8", desc = "Switch to tab 9" },
 
 	# Relative tab navigation
 	{ on = "[", run = "tab_switch -1 --relative", desc = "Previous tab" },
@@ -189,6 +203,23 @@ keymap = [
 	# Reorder tabs
 	{ on = "{", run = "tab_swap -1", desc = "Swap tab left" },
 	{ on = "}", run = "tab_swap 1",  desc = "Swap tab right" },
+
+	# -----------------------------------------------------------------------
+	# Plugin keybindings
+	# -----------------------------------------------------------------------
+	# mount.yazi   — mount / unmount / eject partitions
+	{ on = "M",     run = "plugin mount",                              desc = "Open mount manager" },
+	# ouch.yazi    — compress selected files (default: tar.gz)
+	{ on = "C",     run = "plugin ouch",                               desc = "Compress with ouch" },
+	# cdhist.yazi  — fuzzy-jump to a previously visited directory
+	{ on = "<A-c>", run = "plugin cdhist -- _ --fuzzy=fzf",           desc = "Jump via cdhist (fzf)" },
+	# chmod.yazi   — change file permissions interactively
+	{ on = "<C-m>", run = "plugin chmod",                             desc = "Change permissions (chmod)" },
+	# duckdb.yazi  — scroll columns left / right in tabular preview
+	{ on = "H",     run = "plugin duckdb -1",                         desc = "duckdb: scroll column left" },
+	{ on = "L",     run = "plugin duckdb +1",                         desc = "duckdb: scroll column right" },
+	# mediainfo.yazi — toggle metadata overlay in media preview
+	{ on = "<F9>",  run = "plugin mediainfo -- toggle-metadata",      desc = "Toggle mediainfo metadata" },
 
 	# -----------------------------------------------------------------------
 	# Tasks — v25.4.8+: tasks_show → tasks:show

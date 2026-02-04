@@ -55,8 +55,8 @@ reveal = [
 	{ run = '''exiftool "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show EXIF", for = "unix" },
 ]
 extract = [
-	{ run = 'ya pub extract --list "$@"', desc = "Extract here", for = "unix" },
-	{ run = 'ya pub extract --list %*',   desc = "Extract here", for = "windows" },
+	{ run = 'ouch d -y "$@"', desc = "Extract here (ouch)", for = "unix" },
+	{ run = 'ouch d -y %*',   desc = "Extract here (ouch)", for = "windows" },
 ]
 play = [
 	{ run = 'mpv --force-window "$@"', orphan = true, desc = "Play",            for = "unix" },
@@ -95,60 +95,102 @@ rules = [
 micro_workers    = 10
 macro_workers    = 25
 bizarre_retry    = 5
-image_alloc      = 536870912           # 512 MB — max memory for image decoding
+image_alloc      = 1073741824          # 1 GB  — raised for mediainfo large-file previews
 image_bound      = [ 0, 0 ]           # [width, height] hard cap; 0 = unlimited
 suppress_preload = false               # hide preload tasks from the task list
 
 # ---------------------------------------------------------------------------
-# Plugins — built-in fetchers / preloaders / previewers
+# Plugins — fetchers / preloaders / previewers
+# ---------------------------------------------------------------------------
+# Plugin priority order (prepend = highest priority, checked first):
+#   git fetcher → mime fetchers → mediainfo/office/duckdb/ouch previewers
+#   → built-in previewers → piper fallback
 # ---------------------------------------------------------------------------
 [plugin]
 
-# Fetchers: detect MIME type and directory type
+# ── Fetchers ─────────────────────────────────────────────────────────────
+# git.yazi: tag every file/dir with git status (must come before mime)
+# mime.*  : standard MIME-type detection
 fetchers = [
-	{ id = "mime.local", url = "*", run = "mime", if = "!mime", prio = "high" },  # local MIME detection
-	{ id = "mime.dir",   url = "*/", run = "mime", prio = "high" },               # directory MIME detection
+	{ id = "git",        url = "*",  run = "git" },
+	{ id = "git",        url = "*/", run = "git" },
+	{ id = "mime.local", url = "*",  run = "mime", if = "!mime", prio = "high" },
+	{ id = "mime.dir",   url = "*/", run = "mime", prio = "high" },
 ]
 
-# Preloaders: prepare cached thumbnails / data before previewing
+# ── Preloaders ───────────────────────────────────────────────────────────
+# mediainfo.yazi handles audio/video/image thumbnails — replaces the
+# built-in image/video/magick preloaders for those MIME types.
+# office.yazi pre-renders Office documents to images.
 preloaders = [
-	# Images — special formats need ImageMagick conversion first
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
-	{ mime = "image/*",                       run = "image" },
-	# Video thumbnails
-	{ mime = "video/*", run = "video" },
-	# PDF first-page thumbnail
-	{ mime = "application/pdf", run = "pdf" },
-	# Fonts
-	{ mime = "font/*",                       run = "font" },
-	{ mime = "application/vnd.ms-opentype",  run = "font" },
-]
-
-# Previewers: render preview content in the right panel
-previewers = [
-	{ url = "*/", run = "folder", sync = true },          # directory listing
-	# Code / text
-	{ mime = "text/*",                                    run = "code" },
-	{ mime = "*/{xml,javascript,x-wine-extension-ini}",  run = "code" },
-	# Structured data
-	{ mime = "application/{json,x-ndjson}", run = "json" },
-	# Images — special formats rendered via ImageMagick
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
-	{ mime = "image/*",                       run = "image" },
-	# Video
-	{ mime = "video/*", run = "video" },
+	# mediainfo — audio, video, images (replaces built-in image/video/magick)
+	{ mime = "{audio,video,image}/*",           run = "mediainfo" },
+	{ mime = "application/subrip",              run = "mediainfo" },
+	{ mime = "application/postscript",          run = "mediainfo" },
+	# office — Office Open XML + ODF
+	{ mime = "application/openxmlformats-officedocument.*", run = "office" },
+	{ mime = "application/oasis.opendocument.*",            run = "office" },
+	{ mime = "application/ms-*",                            run = "office" },
+	{ mime = "application/msword",                          run = "office" },
+	{ url  = "*.docx",                                     run = "office" },
 	# PDF
 	{ mime = "application/pdf", run = "pdf" },
-	# Archives — list contents inline
-	{ mime = "application/{,g}zip",                                          run = "archive" },
-	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar,iso9660-image}", run = "archive" },
 	# Fonts
 	{ mime = "font/*",                       run = "font" },
 	{ mime = "application/vnd.ms-opentype",  run = "font" },
-	# Empty files
+]
+
+# ── Previewers ───────────────────────────────────────────────────────────
+previewers = [
+	# ── Directories ──────────────────────────────────────────────────────
+	{ url = "*/", run = "folder", sync = true },
+
+	# ── mediainfo — audio / video / images (replaces built-in) ──────────
+	{ mime = "{audio,video,image}/*",    run = "mediainfo" },
+	{ mime = "application/subrip",       run = "mediainfo" },
+	{ mime = "application/postscript",   run = "mediainfo" },
+
+	# ── exifaudio — audio metadata with cover art ───────────────────────
+	# (fallback: mediainfo above already handles most audio; exifaudio
+	#  is useful when exiftool cover extraction is preferred)
+
+	# ── duckdb — tabular data files ──────────────────────────────────────
+	{ url = "*.csv",     run = "duckdb" },
+	{ url = "*.tsv",     run = "duckdb" },
+	{ url = "*.parquet", run = "duckdb" },
+	{ url = "*.db",      run = "duckdb" },
+	{ url = "*.duckdb",  run = "duckdb" },
+	{ url = "*.xlsx",    run = "duckdb" },
+
+	# ── office — Office Open XML + ODF documents ────────────────────────
+	{ mime = "application/openxmlformats-officedocument.*", run = "office" },
+	{ mime = "application/oasis.opendocument.*",            run = "office" },
+	{ mime = "application/ms-*",                            run = "office" },
+	{ mime = "application/msword",                          run = "office" },
+	{ url  = "*.docx",                                     run = "office" },
+
+	# ── ouch — archive preview (replaces built-in archive) ──────────────
+	{ mime = "application/{*zip,tar,bzip2,7z*,rar,xz,zstd,java-archive}", run = "ouch" },
+
+	# ── Code / text ──────────────────────────────────────────────────────
+	{ mime = "text/*",                                    run = "code" },
+	{ mime = "*/{xml,javascript,x-wine-extension-ini}",  run = "code" },
+
+	# ── Structured data ──────────────────────────────────────────────────
+	{ mime = "application/{json,x-ndjson}", run = "json" },
+
+	# ── PDF ───────────────────────────────────────────────────────────────
+	{ mime = "application/pdf", run = "pdf" },
+
+	# ── Fonts ─────────────────────────────────────────────────────────────
+	{ mime = "font/*",                       run = "font" },
+	{ mime = "application/vnd.ms-opentype",  run = "font" },
+
+	# ── Empty files ───────────────────────────────────────────────────────
 	{ mime = "inode/x-empty", run = "empty" },
-	# Fallback — generic file info
-	{ url = "*", run = "file" },
+
+	# ── Fallback — piper with hexyl for binary / unknown files ───────────
+	{ url = "*", run = 'piper -- hexyl --border=none --terminal-width=$w "$1"' },
 ]
 
 # ---------------------------------------------------------------------------
