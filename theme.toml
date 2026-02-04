@@ -1,73 +1,105 @@
-# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
-# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
+# Schema validation — paste URL into a TOML linter (e.g. https://taplo.tamasfe.dev/)
+# Issues: https://github.com/yazi-rs/schemas
 "$schema" = "https://yazi-rs.github.io/schemas/theme.json"
 
 # vim:fileencoding=utf-8:foldmethod=marker
 
+# ===========================================================================
+# Flavor — select a pre-made color theme (see yazi-rs/flavors on GitHub)
+# ===========================================================================
 # : Flavor {{{
 
 [flavor]
-use = ""
+use = ""                # empty = use the styles defined below directly
 
 # : }}}
 
+# ===========================================================================
+# Manager — file list, search highlights, copy/cut markers, borders
+# ===========================================================================
 # : Manager {{{
 
-[manager]
-cwd = { fg = "cyan" }
+[mgr]
+cwd = { fg = "cyan" }                                                  # current working directory label
 
-# Hovered
-hovered         = { reversed = true }
-preview_hovered = { underline = true }
-
-# Find
+# Find-match highlighting
 find_keyword  = { fg = "yellow", bold = true, italic = true, underline = true }
 find_position = { fg = "magenta", bg = "reset", bold = true, italic = true }
 
-# Marker
+# Yank / selection markers (left gutter stripe)
 marker_copied   = { fg = "lightgreen",  bg = "lightgreen" }
 marker_cut      = { fg = "lightred",    bg = "lightred" }
 marker_marked   = { fg = "lightcyan",   bg = "lightcyan" }
 marker_selected = { fg = "lightyellow", bg = "lightyellow" }
 
-# Tab
-tab_active   = { reversed = true }
-tab_inactive = {}
-tab_width    = 1
-
-# Count
+# Yank / selection badge counts (right side of status bar)
 count_copied   = { fg = "white", bg = "green" }
 count_cut      = { fg = "white", bg = "red" }
 count_selected = { fg = "white", bg = "yellow" }
 
-# Border
+# Panel border
 border_symbol = "│"
 border_style  = { fg = "gray" }
 
-# Highlighting
-syntect_theme = ""
+# Syntax-highlighting theme for code preview (empty = terminal default)
+syntax_theme = ""
 
 # : }}}
 
+# ===========================================================================
+# Indicator — pane header bar (replaces old hovered / preview_hovered in [mgr])
+# ===========================================================================
+# : Indicator {{{
 
+[indicator]
+# Hovered-file style in the file list
+current = { reversed = true }
+# Hovered-file style in the preview pane
+preview = { underline = true }
+
+# : }}}
+
+# ===========================================================================
+# Tabs — tab bar styling (moved out of [mgr] in v25.5.28)
+# ===========================================================================
+# : Tabs {{{
+
+[tabs]
+active   = { reversed = true }
+inactive = {}
+# tab_width is no longer needed — calculated automatically
+
+# : }}}
+
+# ===========================================================================
+# Mode — indicator badges shown in the status bar
+# ===========================================================================
+# : Mode {{{
+
+[mode]
+normal = { bg = "blue",  bold = true }
+select = { bg = "red",   bold = true }
+unset  = { bg = "red",   bold = true }
+
+# : }}}
+
+# ===========================================================================
+# Status bar — separators, progress, permissions
+# ===========================================================================
 # : Status {{{
 
 [status]
-separator_open  = ""
-separator_close = ""
-separator_style = { fg = "gray", bg = "gray" }
+# Separators — v25.2.26+: sep_left / sep_right replace separator_open/close
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+sep_style = { fg = "gray", bg = "gray" }
 
-# Mode
-mode_normal = { bg = "blue", bold = true }
-mode_select = { bg = "red", bold = true }
-mode_unset  = { bg = "red", bold = true }
-
-# Progress
+# Progress bar (background tasks)
 progress_label  = { bold = true }
-progress_normal = { fg = "blue", bg = "black" }
-progress_error  = { fg = "red", bg = "black" }
+progress_normal = { fg = "blue",  bg = "black" }
+progress_error  = { fg = "red",   bg = "black" }
 
-# Permissions
+# Permission column colours (rwxst)
 permissions_t = { fg = "green" }
 permissions_r = { fg = "yellow" }
 permissions_w = { fg = "red" }
@@ -76,17 +108,21 @@ permissions_s = { fg = "darkgray" }
 
 # : }}}
 
+# ===========================================================================
+# Pick — "Open with" selection dialog (renamed from [select] in v25.5.28)
+# ===========================================================================
+# : Pick {{{
 
-# : Select {{{
-
-[select]
+[pick]
 border   = { fg = "blue" }
 active   = { fg = "magenta", bold = true }
 inactive = {}
 
 # : }}}
 
-
+# ===========================================================================
+# Input — text-input dialogs (cd, rename, create ...)
+# ===========================================================================
 # : Input {{{
 
 [input]
@@ -97,22 +133,26 @@ selected = { reversed = true }
 
 # : }}}
 
+# ===========================================================================
+# Cmp — auto-completion dropdown (renamed from [completion] in v25.2.26)
+# ===========================================================================
+# : Cmp {{{
 
-# : Completion {{{
-
-[completion]
+[cmp]
 border   = { fg = "blue" }
 active   = { reversed = true }
 inactive = {}
 
-# Icons
-icon_file    = ""
-icon_folder  = ""
-icon_command = ""
+# Completion-popup icons
+icon_file    = ""
+icon_folder  = ""
+icon_command = ""
 
 # : }}}
 
-
+# ===========================================================================
+# Tasks — background task-manager panel
+# ===========================================================================
 # : Tasks {{{
 
 [tasks]
@@ -122,7 +162,9 @@ hovered = { fg = "magenta", underline = true }
 
 # : }}}
 
-
+# ===========================================================================
+# Which — keystroke-hint overlay
+# ===========================================================================
 # : Which {{{
 
 [which]
@@ -131,12 +173,14 @@ mask            = { bg = "black" }
 cand            = { fg = "lightcyan" }
 rest            = { fg = "darkgray" }
 desc            = { fg = "lightmagenta" }
-separator       = "  "
+separator       = "  "
 separator_style = { fg = "darkgray" }
 
 # : }}}
 
-
+# ===========================================================================
+# Help — help-screen / keybinding reference
+# ===========================================================================
 # : Help {{{
 
 [help]
@@ -148,7 +192,9 @@ footer  = { fg = "black", bg = "white" }
 
 # : }}}
 
-
+# ===========================================================================
+# Notify — toast notifications (info / warn / error)
+# ===========================================================================
 # : Notify {{{
 
 [notify]
@@ -156,47 +202,40 @@ title_info  = { fg = "green" }
 title_warn  = { fg = "yellow" }
 title_error = { fg = "red" }
 
-# Icons
 icon_info  = ""
 icon_warn  = ""
 icon_error = ""
 
 # : }}}
 
-
-# : File-specific styles {{{
+# ===========================================================================
+# Filetype — colour rules matched against MIME type or file metadata
+# ===========================================================================
+# : Filetype {{{
 
 [filetype]
 
 rules = [
 	# Images
 	{ mime = "image/*", fg = "yellow" },
-
-	# Media
+	# Audio / Video
 	{ mime = "{audio,video}/*", fg = "magenta" },
-
 	# Archives
-	{ mime = "application/{,g}zip", fg = "red" },
-	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", fg = "red" },
-
+	{ mime = "application/{,g}zip",                              fg = "red" },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}",  fg = "red" },
 	# Documents
 	{ mime = "application/{pdf,doc,rtf,vnd.*}", fg = "cyan" },
 
-	# Empty files
-	# { mime = "inode/x-empty", fg = "red" },
+	# Special / dummy files
+	{ name = "*",  is = "orphan", bg = "red" },
+	{ name = "*",  is = "exec",   fg = "green" },
+	{ name = "*",  is = "dummy",  bg = "red" },
+	{ name = "*/", is = "dummy",  bg = "red" },
 
-	# Special files
-	{ name = "*", is = "orphan", bg = "red" },
-	{ name = "*", is = "exec"  , fg = "green" },
-
-	# Dummy files
-	{ name = "*", is = "dummy", bg = "red" },
-	{ name = "*/", is = "dummy", bg = "red" },
-
-	# Fallback
-	# { name = "*", fg = "white" },
-	{ name = "*/", fg = "blue" }
+	# Directories
+	{ name = "*/", fg = "blue" },
 ]
+
 
 [icon]
 

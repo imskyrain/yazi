@@ -1,39 +1,47 @@
-# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
-# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
+# Schema validation — paste URL into a TOML linter (e.g. https://taplo.tamasfe.dev/)
+# Issues: https://github.com/yazi-rs/schemas
 "$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
 
-[manager]
-ratio          = [ 1, 4, 3 ]
-sort_by        = "created"
-sort_sensitive = false
-sort_reverse 	 = true 
-sort_dir_first = false
-sort_translit  = false
-linemode       = "none"
-show_hidden    = false
-show_symlink   = true
-scrolloff      = 5
+# ---------------------------------------------------------------------------
+# Manager — file-list layout & sorting
+# ---------------------------------------------------------------------------
+[mgr]
+ratio          = [ 1, 4, 3 ]          # left : center : right panel width
+sort_by        = "btime"              # none | mtime | btime | extension | alphabetical | natural | size | random
+sort_sensitive = false                # case-sensitive sorting
+sort_reverse   = true                 # reverse sort order
+sort_dir_first = false                # directories listed first
+sort_translit  = false                # transliterate names for sorting (useful for CJK)
+linemode       = "none"               # none | size | btime | mtime | permissions | owner
+show_hidden    = false                # show dotfiles / hidden files
+show_symlink   = true                 # show symlink target in the file list
+scrolloff      = 5                    # lines kept visible above / below cursor
 mouse_events   = [ "click", "scroll" ]
-title_format   = "Yazi: {cwd}"
+title_format   = "Yazi: {cwd}"        # terminal title; placeholders: {cwd}
 
+# ---------------------------------------------------------------------------
+# Preview — right-panel file previewing
+# ---------------------------------------------------------------------------
 [preview]
-wrap            = "no"
-tab_size        = 2
-max_width       = 600
-max_height      = 900
-cache_dir       = ""
-image_delay     = 30
-image_filter    = "triangle"
-image_quality   = 75
-sixel_fraction  = 15
-ueberzug_scale  = 1
-ueberzug_offset = [ 0, 0, 0, 0 ]
+wrap           = "no"                 # word-wrap in code preview (yes | no)
+tab_size       = 2                    # tab → N spaces in code preview
+max_width      = 600                  # max image preview width  (px)
+max_height     = 900                  # max image preview height (px)
+cache_dir      = ""                   # custom cache dir; empty = default
+image_delay    = 30                   # ms to wait before sending image data
+image_filter   = "triangle"           # nearest | triangle | catmull-rom | lanczos3
+image_quality  = 75                   # pre-cache JPEG quality (50-90)
+ueberzug_scale  = 1                   # Überzug++ image scale factor
+ueberzug_offset = [ 0, 0, 0, 0 ]     # [top, right, bottom, left] offset
 
+# ---------------------------------------------------------------------------
+# Openers — how to open / edit / reveal / extract / play files
+# ---------------------------------------------------------------------------
 [opener]
 edit = [
 	{ run = '${EDITOR:-vi} "$@"', desc = "$EDITOR", block = true, for = "unix" },
-	{ run = 'code %*',    orphan = true, desc = "code",           for = "windows" },
-	{ run = 'code -w %*', block = true,  desc = "code (block)",   for = "windows" },
+	{ run = 'code %*',           desc = "code",           orphan = true, for = "windows" },
+	{ run = 'code -w %*',        desc = "code (block)",   block = true,  for = "windows" },
 ]
 open = [
 	{ run = 'xdg-open "$1"',                desc = "Open", for = "linux" },
@@ -41,9 +49,9 @@ open = [
 	{ run = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" },
 ]
 reveal = [
-	{ run = 'xdg-open "$(dirname "$1")"',           desc = "Reveal", for = "linux" },
-	{ run = 'open -R "$1"',                         desc = "Reveal", for = "macos" },
-	{ run = 'explorer /select,"%1"', orphan = true, desc = "Reveal", for = "windows" },
+	{ run = 'xdg-open "$(dirname "$1")"',           desc = "Reveal",        for = "linux" },
+	{ run = 'open -R "$1"',                         desc = "Reveal",        for = "macos" },
+	{ run = 'explorer /select,"%1"', orphan = true, desc = "Reveal",        for = "windows" },
 	{ run = '''exiftool "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show EXIF", for = "unix" },
 ]
 extract = [
@@ -51,95 +59,111 @@ extract = [
 	{ run = 'ya pub extract --list %*',   desc = "Extract here", for = "windows" },
 ]
 play = [
-	{ run = 'mpv --force-window "$@"', orphan = true, for = "unix" },
-	{ run = 'mpv --force-window %*', orphan = true, for = "windows" },
+	{ run = 'mpv --force-window "$@"', orphan = true, desc = "Play",            for = "unix" },
+	{ run = 'mpv --force-window %*',   orphan = true, desc = "Play",            for = "windows" },
 	{ run = '''mediainfo "$1"; echo "Press enter to exit"; read _''', block = true, desc = "Show media info", for = "unix" },
 ]
 
+# ---------------------------------------------------------------------------
+# Open rules — map file types to opener groups
+# ---------------------------------------------------------------------------
 [open]
 rules = [
-	# Folder
-	{ name = "*/", use = [ "edit", "open", "reveal" ] },
-	# Text
+	# Directories
+	{ url = "*/", use = [ "edit", "open", "reveal" ] },
+	# Plain text
 	{ mime = "text/*", use = [ "edit", "reveal" ] },
-	# Image
+	# Images
 	{ mime = "image/*", use = [ "open", "reveal" ] },
-	# Media
+	# Audio / Video
 	{ mime = "{audio,video}/*", use = [ "play", "reveal" ] },
-	# Archive
-	{ mime = "application/{,g}zip", use = [ "extract", "reveal" ] },
-	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}", use = [ "extract", "reveal" ] },
-	# JSON
+	# Archives
+	{ mime = "application/{,g}zip",                              use = [ "extract", "reveal" ] },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar}",  use = [ "extract", "reveal" ] },
+	# Code / data — JSON, JS, empty files
 	{ mime = "application/{json,x-ndjson}", use = [ "edit", "reveal" ] },
-	{ mime = "*/javascript", use = [ "edit", "reveal" ] },
-	# Empty file
-	{ mime = "inode/x-empty", use = [ "edit", "reveal" ] },
+	{ mime = "*/javascript",                use = [ "edit", "reveal" ] },
+	{ mime = "inode/x-empty",               use = [ "edit", "reveal" ] },
 	# Fallback
-	{ name = "*", use = [ "open", "reveal" ] },
+	{ url = "*", use = [ "open", "reveal" ] },
 ]
 
+# ---------------------------------------------------------------------------
+# Tasks — background worker pool tuning
+# ---------------------------------------------------------------------------
 [tasks]
 micro_workers    = 10
 macro_workers    = 25
 bizarre_retry    = 5
-image_alloc      = 536870912  # 512MB
-image_bound      = [ 0, 0 ]
-suppress_preload = false
+image_alloc      = 536870912           # 512 MB — max memory for image decoding
+image_bound      = [ 0, 0 ]           # [width, height] hard cap; 0 = unlimited
+suppress_preload = false               # hide preload tasks from the task list
 
+# ---------------------------------------------------------------------------
+# Plugins — built-in fetchers / preloaders / previewers
+# ---------------------------------------------------------------------------
 [plugin]
 
+# Fetchers: detect MIME type and directory type
 fetchers = [
-	# Mimetype
-	{ id = "mime", name = "*", run = "mime", if = "!mime", prio = "high" },
-]
-preloaders = [
-	# Image
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
-	{ mime = "image/*", run = "image" },
-	# Video
-	{ mime = "video/*", run = "video" },
-	# PDF
-	{ mime = "application/pdf", run = "pdf" },
-	# Font
-	{ mime = "font/*", run = "font" },
-	{ mime = "application/vnd.ms-opentype", run = "font" },
-]
-previewers = [
-	{ name = "*/", run = "folder", sync = true },
-	# Code
-	{ mime = "text/*", run = "code" },
-	{ mime = "*/{xml,javascript,x-wine-extension-ini}", run = "code" },
-	# JSON
-	{ mime = "application/{json,x-ndjson}", run = "json" },
-	# Image
-	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
-	{ mime = "image/*", run = "image" },
-	# Video
-	{ mime = "video/*", run = "video" },
-	# PDF
-	{ mime = "application/pdf", run = "pdf" },
-	# Archive
-	{ mime = "application/{,g}zip", run = "archive" },
-	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar,iso9660-image}", run = "archive" },
-	# Font
-	{ mime = "font/*", run = "font" },
-	{ mime = "application/vnd.ms-opentype", run = "font" },
-	# Empty file
-	{ mime = "inode/x-empty", run = "empty" },
-	# Fallback
-	{ name = "*", run = "file" },
+	{ id = "mime.local", url = "*", run = "mime", if = "!mime", prio = "high" },  # local MIME detection
+	{ id = "mime.dir",   url = "*/", run = "mime", prio = "high" },               # directory MIME detection
 ]
 
+# Preloaders: prepare cached thumbnails / data before previewing
+preloaders = [
+	# Images — special formats need ImageMagick conversion first
+	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*",                       run = "image" },
+	# Video thumbnails
+	{ mime = "video/*", run = "video" },
+	# PDF first-page thumbnail
+	{ mime = "application/pdf", run = "pdf" },
+	# Fonts
+	{ mime = "font/*",                       run = "font" },
+	{ mime = "application/vnd.ms-opentype",  run = "font" },
+]
+
+# Previewers: render preview content in the right panel
+previewers = [
+	{ url = "*/", run = "folder", sync = true },          # directory listing
+	# Code / text
+	{ mime = "text/*",                                    run = "code" },
+	{ mime = "*/{xml,javascript,x-wine-extension-ini}",  run = "code" },
+	# Structured data
+	{ mime = "application/{json,x-ndjson}", run = "json" },
+	# Images — special formats rendered via ImageMagick
+	{ mime = "image/{avif,hei?,jxl,svg+xml}", run = "magick" },
+	{ mime = "image/*",                       run = "image" },
+	# Video
+	{ mime = "video/*", run = "video" },
+	# PDF
+	{ mime = "application/pdf", run = "pdf" },
+	# Archives — list contents inline
+	{ mime = "application/{,g}zip",                                          run = "archive" },
+	{ mime = "application/x-{tar,bzip*,7z-compressed,xz,rar,iso9660-image}", run = "archive" },
+	# Fonts
+	{ mime = "font/*",                       run = "font" },
+	{ mime = "application/vnd.ms-opentype",  run = "font" },
+	# Empty files
+	{ mime = "inode/x-empty", run = "empty" },
+	# Fallback — generic file info
+	{ url = "*", run = "file" },
+]
+
+# ---------------------------------------------------------------------------
+# Input dialogs — title, position, and size for each prompt type
+# ---------------------------------------------------------------------------
 [input]
 cursor_blink = false
 
-# cd
+# cd prompt
 cd_title  = "Change directory:"
 cd_origin = "top-center"
 cd_offset = [ 0, 2, 50, 3 ]
 
-# create
-create_title  = "Create:"
+# create file / directory
+create_title  = [ "Create:", "Create (confirm):" ]
 create_origin = "top-center"
 create_offset = [ 0, 2, 50, 3 ]
 
@@ -148,59 +172,71 @@ rename_title  = "Rename:"
 rename_origin = "hovered"
 rename_offset = [ 0, 1, 50, 3 ]
 
-# filter
+# filter (live filter on file list)
 filter_title  = "Filter:"
 filter_origin = "top-center"
 filter_offset = [ 0, 2, 50, 3 ]
 
-# find
+# find (jump to matching file)
 find_title  = [ "Find next:", "Find previous:" ]
 find_origin = "top-center"
 find_offset = [ 0, 2, 50, 3 ]
 
-# search
+# search (fd / ripgrep)
 search_title  = "Search via {n}:"
 search_origin = "top-center"
 search_offset = [ 0, 2, 50, 3 ]
 
-# shell
+# inline shell
 shell_title  = [ "Shell:", "Shell (block):" ]
 shell_origin = "top-center"
 shell_offset = [ 0, 2, 50, 3 ]
 
+# ---------------------------------------------------------------------------
+# Confirmation dialogs
+# ---------------------------------------------------------------------------
 [confirm]
-# trash
-trash_title 	= "Trash {n} selected file{s}?"
-trash_origin	= "center"
-trash_offset	= [ 0, 0, 70, 20 ]
+# Trash selected files
+trash_title  = "Trash {n} selected file{s}?"
+trash_origin = "center"
+trash_offset = [ 0, 0, 70, 20 ]
 
-# delete
-delete_title 	= "Permanently delete {n} selected file{s}?"
-delete_origin	= "center"
-delete_offset	= [ 0, 0, 70, 20 ]
+# Permanent deletion
+delete_title  = "Permanently delete {n} selected file{s}?"
+delete_origin = "center"
+delete_offset = [ 0, 0, 70, 20 ]
 
-# overwrite
-overwrite_title   = "Overwrite file?"
-overwrite_content = "Will overwrite the following file:"
-overwrite_origin  = "center"
-overwrite_offset  = [ 0, 0, 50, 15 ]
+# Overwrite on paste — "body" replaces the old "content" key (v25.12.29+)
+overwrite_title  = "Overwrite file?"
+overwrite_body   = "Will overwrite the following file:"
+overwrite_origin = "center"
+overwrite_offset = [ 0, 0, 50, 15 ]
 
-# quit
-quit_title   = "Quit?"
-quit_content = "The following task is still running, are you sure you want to quit?"
-quit_origin  = "center"
-quit_offset  = [ 0, 0, 50, 15 ]
+# Quit while tasks are running
+quit_title  = "Quit?"
+quit_body   = "The following task is still running, are you sure you want to quit?"
+quit_origin = "center"
+quit_offset = [ 0, 0, 50, 15 ]
 
-[select]
+# ---------------------------------------------------------------------------
+# Pick dialog — "Open with" menu
+# ---------------------------------------------------------------------------
+[pick]
 open_title  = "Open with:"
 open_origin = "hovered"
 open_offset = [ 0, 1, 50, 7 ]
 
+# ---------------------------------------------------------------------------
+# Which — keystroke hint overlay
+# ---------------------------------------------------------------------------
 [which]
-sort_by      	 = "none"
+sort_by        = "none"               # none | key | desc
 sort_sensitive = false
-sort_reverse 	 = false
+sort_reverse   = false
 sort_translit  = false
 
+# ---------------------------------------------------------------------------
+# Logging — enable for troubleshooting; disable in production
+# ---------------------------------------------------------------------------
 [log]
 enabled = false
