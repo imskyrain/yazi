@@ -97,7 +97,7 @@ macro_workers    = 25
 bizarre_retry    = 5
 image_alloc      = 1073741824          # 1 GB  — raised for mediainfo large-file previews
 image_bound      = [ 0, 0 ]           # [width, height] hard cap; 0 = unlimited
-suppress_preload = false               # hide preload tasks from the task list
+suppress_preload = true               # hide preload tasks from the task list
 
 # ---------------------------------------------------------------------------
 # Plugins — fetchers / preloaders / previewers
@@ -114,8 +114,8 @@ suppress_preload = false               # hide preload tasks from the task list
 fetchers = [
 	{ id = "git",        url = "*",  run = "git" },
 	{ id = "git",        url = "*/", run = "git" },
-	{ id = "mime.local", url = "*",  run = "mime", if = "!mime", prio = "high" },
-	{ id = "mime.dir",   url = "*/", run = "mime", prio = "high" },
+	{ id = "mime.local", url = "*",  run = "mime.local", if = "!mime", prio = "high" },
+	{ id = "mime.dir",   url = "*/", run = "mime.dir",   prio = "high" },
 ]
 
 # ── Preloaders ───────────────────────────────────────────────────────────

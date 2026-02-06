@@ -46,6 +46,7 @@ keymap = [
 	# -----------------------------------------------------------------------
 	{ on = "h",       run = "leave",                  desc = "Go back to parent directory" },
 	{ on = "l",       run = "plugin smart-enter",     desc = "Enter dir or open file (smart-enter)" },
+	{ on = "i",       run = "plugin smart-enter",     desc = "Enter dir or open file (smart-enter)" },
 	{ on = "<Left>",  run = "leave",                  desc = "Go back to parent directory" },
 	{ on = "<Right>", run = "plugin smart-enter",     desc = "Enter dir or open file (smart-enter)" },
 
@@ -62,7 +63,7 @@ keymap = [
 	# -----------------------------------------------------------------------
 	# Selection
 	# -----------------------------------------------------------------------
-	{ on = "<Space>", run = [ "select --state=none", "arrow 1" ], desc = "Toggle selection and move down" },
+	{ on = "<Space>", run = [ "toggle", "arrow 1" ], desc = "Toggle selection and move down" },
 	{ on = "v",       run = "visual_mode",                        desc = "Enter visual (select) mode" },
 	{ on = "V",       run = "visual_mode --unset",                desc = "Enter visual (unset) mode" },
 	{ on = "<C-a>",   run = "select_all --state=true",            desc = "Select all files" },
